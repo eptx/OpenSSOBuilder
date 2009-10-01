@@ -5,7 +5,15 @@ class OpenssoHelper {
     def token
     //??? make rest call here to osso to get cookie name
     def cookieName = "iPlanetDirectoryPro"
-    def OpenssoHelper(url, username, password) { 
+    def OpenssoHelper(url, username, password) {
+    	// disable ssl cert validation by default
+    	OpenssoHelper(true, url, username, password)
+    }
+    
+    def OpenssoHelper(sslDisable, url, username, password) {
+    	if(sslDisable) {
+    		 SSLCertValidation.disable() 
+    	}
         this.opensso = new HTTPBuilder(url) 
         login(username, password) 
     }
@@ -15,6 +23,12 @@ class OpenssoHelper {
         def results = parseResults(rawResults)
         this.token = results['token.id'] 
     }
+    
+def createAgent(realm,agentname,agenttype,atts) { 
+	//???missing atts [attributevalues: name1=value], attributevalues: name2=value,...]
+    def query = [cmd: "create-agent", realm: realm, agentname: agentname, agentype: agenttype, submit: ""] 
+    println opensso.post(path: "ssoadm.jsp", query: query, headers:[cookie: "${cookieName}=${token}"]) 
+}
 
 def createRealm(realm) { 
     def query = [cmd: "create-realm", realm: realm, submit: ""] 
