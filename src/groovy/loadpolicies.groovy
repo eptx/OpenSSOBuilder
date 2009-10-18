@@ -23,10 +23,10 @@ class OpenssoHelper {
         def results = parseResults(rawResults)
         this.token = results['token.id'] 
     }
-    
+//atts: list of 'key=value' strings. They are passed in unencoded and the function encodes them prior to posting    
 def createAgent(realm,agentname,agenttype,atts) { 
-	//???missing atts [attributevalues: name1=value], attributevalues: name2=value,...]
-    def query = [cmd: "create-agent", realm: realm, agentname: agentname, agentype: agenttype, submit: ""] 
+    def query = [cmd: "create-agent", realm: realm, agentname: agentname, agentype: agenttype, submit: ""]
+    atts.each {att -> query.addQueryParam 'attributevalues', URLEncoder.encode(att) }  
     println opensso.post(path: "ssoadm.jsp", query: query, headers:[cookie: "${cookieName}=${token}"]) 
 }
 
@@ -47,13 +47,9 @@ def createPolicy(realm,policy) {
 }
 
 def deletePolicies(realm,policies) { 
-    //more work here, uribuilder doesn't support multi value params yet (issue filed), so multiple calls to delete policies
-    for (policy in policies) {
-    try{
-        def query = [cmd: "delete-policies", realm: realm, policynames: policy , submit: ""] 
-        println opensso.post(path: "ssoadm.jsp", query: query, headers:[cookie: "${cookieName}=${token}"]) 
-    } catch (Error e){}
-    }
+    def query = [cmd: "delete-policies", realm: realm, policynames: policy , submit: ""] 
+    policies.each {policy -> query.addQueryParam 'policynames', policy }   
+    println opensso.post(path: "ssoadm.jsp", query: query, headers:[cookie: "${cookieName}=${token}"]) 
 }
 
 def removeRealm(realm) { 
